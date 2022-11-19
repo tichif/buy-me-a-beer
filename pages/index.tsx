@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 import { DONATION_IN_CENTS, MAX_DONATION_IN_CENT } from '../config';
 
@@ -10,7 +11,32 @@ export default function Home() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState(null);
 
+  const router = useRouter();
+
   const presets = [1, 3, 5];
+
+  async function handleCheckout() {
+    setError(null);
+    const response = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name,
+        message,
+        quantity,
+      }),
+    });
+    const res = await response.json();
+
+    if (!res.ok) {
+      setError(res.error);
+    }
+
+    const url = res.url;
+    router.push(url);
+  }
 
   return (
     <div>
@@ -26,6 +52,7 @@ export default function Home() {
         </div>
         <div>
           <h1>Buy Me a Beer</h1>
+          {error && <div>{error}</div>}
           <div className='flex items-center full-w mb-2'>
             <span className='mr-2'>
               <Image src='/beer.svg' width='50' height='100' alt='beer' />
@@ -73,7 +100,10 @@ export default function Home() {
             />
           </div>
 
-          <button className='bg-blue-500 rounded shadow px-4 py-2 text-white'>
+          <button
+            className='bg-blue-500 rounded shadow px-4 py-2 text-white'
+            onClick={handleCheckout}
+          >
             Donate ${(quantity * DONATION_IN_CENTS) / 100}
           </button>
         </div>
