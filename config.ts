@@ -9,3 +9,6 @@ export const MAX_DONATION_IN_CENT = parseInt(
 );
 
 export const STRIPE_API_KEY = process.env.STRIPE_API_KEY as string;
+
+export const STRIPE_WEBHOOK_SECRET = process.env
+  .STRIPE_WEBHOOK_SECRET as string;
