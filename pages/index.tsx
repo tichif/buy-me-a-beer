@@ -2,10 +2,12 @@ import { useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+import { GetServerSideProps } from 'next';
 
 import { DONATION_IN_CENTS, MAX_DONATION_IN_CENT } from '../config';
+import { Record } from '../types';
 
-export default function Home() {
+export default function Home({ donations }: { donations: Array<Record> }) {
   const [quantity, setQuantity] = useState(1);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
@@ -49,6 +51,13 @@ export default function Home() {
       <main className='flex max-w-2xl m-auto'>
         <div className='flex-1'>
           <h2>Previous Donations</h2>
+          {donations.map((donation) => (
+            <div key={donation.id} className='p-4 shadow mb-2'>
+              {donation.fields.name} donated ${donation.fields.amount}
+              <br />
+              {donation.fields.message}
+            </div>
+          ))}
         </div>
         <div>
           <h1>Buy Me a Beer</h1>
@@ -111,3 +120,18 @@ export default function Home() {
     </div>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const protocol = ctx.req.headers['x-forwarded-proto'] || 'http';
+
+  const response = await fetch(
+    `${protocol}://${ctx.req.headers.host}/api/donations`
+  );
+  const donations = await response.json();
+
+  return {
+    props: {
+      donations,
+    },
+  };
+};
