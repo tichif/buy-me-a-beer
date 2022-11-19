@@ -2,7 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import { buffer } from 'micro';
 
-import { STRIPE_API_KEY, STRIPE_WEBHOOK_SECRET } from '../../config';
+import {
+  AIRTABLE_API_KEY,
+  AIRTABLE_APP_ID,
+  STRIPE_API_KEY,
+  STRIPE_WEBHOOK_SECRET,
+} from '../../config';
 
 const stripe = new Stripe(STRIPE_API_KEY, {
   apiVersion: '2022-08-01',
@@ -13,6 +18,39 @@ export const config = {
     bodyParser: false,
   },
 };
+
+async function insertToAirtable({
+  name,
+  message,
+  amount,
+}: {
+  name: string;
+  message: string;
+  amount: number;
+}) {
+  const url = `https://api.airtable.com/v0/${AIRTABLE_APP_ID}/donations`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      records: [
+        {
+          fields: {
+            name,
+            message,
+            amount,
+          },
+        },
+      ],
+    }),
+  });
+
+  return response.json();
+}
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -48,7 +86,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     event.data.object as { metadata: { name: string; message: string } }
   ).metadata;
 
-  console.log(metadata);
+  const amount =
+    (event.data.object as { amount_total: number }).amount_total / 100;
+
+  await insertToAirtable({ ...metadata, amount });
 
   return res.status(200).json({ message: 'Success' });
 }
