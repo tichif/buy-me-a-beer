@@ -1,6 +1,17 @@
+import { useState } from 'react';
 import Head from 'next/head';
+import Image from 'next/image';
+
+import { DONATION_IN_CENTS, MAX_DONATION_IN_CENT } from '../config';
 
 export default function Home() {
+  const [quantity, setQuantity] = useState(1);
+  const [name, setName] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState(null);
+
+  const presets = [1, 3, 5];
+
   return (
     <div>
       <Head>
@@ -9,7 +20,64 @@ export default function Home() {
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
-      <main className='flex'></main>
+      <main className='flex max-w-2xl m-auto'>
+        <div className='flex-1'>
+          <h2>Previous Donations</h2>
+        </div>
+        <div>
+          <h1>Buy Me a Beer</h1>
+          <div className='flex items-center full-w mb-2'>
+            <span className='mr-2'>
+              <Image src='/beer.svg' width='50' height='100' alt='beer' />
+            </span>
+            <span className='mr-2'>X</span>
+            {presets.map((preset) => (
+              <button
+                className='bg-blue-500 text-white px-4 py-2 rounded mr-2'
+                key={preset}
+                onClick={() => setQuantity(preset)}
+              >
+                {preset}
+              </button>
+            ))}
+            <input
+              type='number'
+              onChange={(e) => setQuantity(parseFloat(e.target.value))}
+              value={quantity}
+              min={1}
+              max={MAX_DONATION_IN_CENT / DONATION_IN_CENTS}
+              className='shadow rounded w-full border border-blue-500 p-2'
+            />
+          </div>
+          <div className='mb-2 w-full'>
+            <label className='block' htmlFor='name'>
+              Name(Optional)
+            </label>
+            <input
+              type='text'
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              id='name'
+              className='shadow rounded w-full border border-blue-500 p-2'
+              placeholder='Tichif'
+            />
+          </div>
+          <div className='mb-2 w-full'>
+            <label htmlFor='message'>Message(Optional)</label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              id='message'
+              className='shadow rounded w-full border border-blue-500 p-2'
+              placeholder='Thank you'
+            />
+          </div>
+
+          <button className='bg-blue-500 rounded shadow px-4 py-2 text-white'>
+            Donate ${(quantity * DONATION_IN_CENTS) / 100}
+          </button>
+        </div>
+      </main>
     </div>
   );
 }
